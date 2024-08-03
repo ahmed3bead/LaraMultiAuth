@@ -1,0 +1,27 @@
+{
+    "name": "ahmedebead/laramultiauth",
+    "description": "A comprehensive authentication package for Laravel that supports multi-guard and OTP verification.",
+    "autoload": {
+        "psr-4": {
+            "AhmedEbead\\LaraMultiAuth\\": "src/"
+        }
+    },
+    "require": {
+        "laravel/framework": "^10.0",
+        "ichtrojan/laravel-otp": "^2.0",
+        "laravel/passport": "^11.0"
+    },
+    "authors": [
+        {
+            "name": "Ahmed Ebead",
+            "email": "ahmed.ebead@munjz.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "AhmedEbead\\LaraMultiAuth\\Providers\\LaraMultiAuthServiceProvider"
+            ]
+        }
+    }
+}
