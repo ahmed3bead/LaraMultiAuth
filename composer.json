@@ -30,7 +30,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "AhmedEbead\\LaraMultiAuth\\Providers\\LaraMultiAuthServiceProvider"
+                "AhmedEbead\\LaraMultiAuth\\LaraMultiAuthServiceProvider"
             ]
         }
     },
