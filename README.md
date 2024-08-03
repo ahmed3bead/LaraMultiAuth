@@ -30,6 +30,8 @@ After installing the package, run the following command to complete the setup:
 
 ```bash
 php artisan multiauth:setup
+php artisan passport:install # If needed 
+
 ```
 
 2.  **Register the Service Provider**
