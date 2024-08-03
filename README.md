@@ -1,4 +1,4 @@
-# LaraMultiAuth Package Documentation
+# LaraMultiAuth Package Documentation (still under development)
 
 *   [Introduction](#introduction)
 *   [Installation](#installation)
