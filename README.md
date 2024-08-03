@@ -20,21 +20,29 @@ To install the `LaraMultiAuth` package, follow these steps:
 
 1.  **Add the Package to Your Project**
 
-    ```
+    ```bash
     composer require ahmedebead/laramultiauth
     ```
+
+## Setup
+
+After installing the package, run the following command to complete the setup:
+
+```bash
+php artisan multiauth:setup
+```
 
 2.  **Register the Service Provider**
 
     Add the following line to the `providers` array in `config/app.php`:
 
-    ```
+    ```php
     AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider::class,
     ```
 
 3.  **Publish the Configuration File**
 
-    ```
+    ```bash
     php artisan vendor:publish --provider="AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider"
     ```
 
@@ -43,7 +51,7 @@ To install the `LaraMultiAuth` package, follow these steps:
 
 Update the `config/multiauth.php` file to configure models and SMS helper functions:
 
-```
+```php
 <?php
 
 return [
@@ -65,7 +73,7 @@ return [
 
 Use the package functions via the `LaraMultiAuth` facade:
 
-```
+```php
 use AhmedEbead\LaraMultiAuth\Facades\LaraMultiAuth;
 
 // Login
@@ -102,7 +110,7 @@ Extend `BaseAuthModel` for each guard.
 
 **Web User Model**
 
-```
+```php
 <?php
 
 namespace App\Models;
@@ -117,7 +125,7 @@ class WebUser extends BaseAuthModel
 
 **API User Model**
 
-```
+```php
 <?php
 
 namespace App\Models;
@@ -132,7 +140,7 @@ class ApiUser extends BaseAuthModel
 
 **Admin User Model**
 
-```
+```php
 <?php
 
 namespace App\Models;
@@ -151,7 +159,7 @@ class AdminUser extends BaseAuthModel
 
 Add this helper function to your project to handle SMS sending:
 
-```
+```php
 if (!function_exists('sendSmsHelperFunction')) {
     function sendSmsHelperFunction($phone, $otp)
     {
@@ -177,7 +185,7 @@ The authentication methods are dynamically handled based on the guard specified 
 
 **Login with Email**
 
-```
+```php
 $token = LaraMultiAuth::login([
     'email' => 'user@example.com',
     'password' => 'password123',
@@ -186,7 +194,7 @@ $token = LaraMultiAuth::login([
 
 **Register a New User**
 
-```
+```php
 $user = LaraMultiAuth::register([
     'email' => 'newuser@example.com',
     'password' => 'password123',
@@ -195,14 +203,14 @@ $user = LaraMultiAuth::register([
 
 **Generate and Verify OTP**
 
-```
+```php
 $otp = LaraMultiAuth::generateOtp('1234567890');
 $isVerified = LaraMultiAuth::verifyOtp('1234567890', $otp);
 ```
 
 **Generate and Send OTP**
 
-```
+```php
 $otp = LaraMultiAuth::generateAndSendOtp('1234567890');
 ```
 
