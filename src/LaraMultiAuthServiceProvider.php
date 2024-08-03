@@ -18,7 +18,7 @@ class LaraMultiAuthServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/multiauth.php' => config_path('multiauth.php'),
+            __DIR__.'/config/multiauth.php' => config_path('multiauth.php'),
         ], 'config');
 
         $this->commands([
