@@ -13,13 +13,20 @@
             "AhmedEbead\\LaraMultiAuth\\": "src/"
         }
     },
+    "scripts": {
+        "post-install-cmd": [
+            "php artisan multiauth:setup"
+        ],
+        "post-update-cmd": [
+            "php artisan multiauth:setup"
+        ]
+    },
     "require": {
         "php": "^8.1",
         "laravel/framework": "^10.0",
         "ichtrojan/laravel-otp": "^2.0",
         "laravel/passport": "^11.0"
     },
-
     "extra": {
         "laravel": {
             "providers": [

@@ -2,6 +2,7 @@
 
 namespace AhmedEbead\LaraMultiAuth;
 
+use AhmedEbead\LaraMultiAuth\Console\SetupCommand;
 use Illuminate\Support\ServiceProvider;
 use AhmedEbead\LaraMultiAuth\Services\AuthService;
 
@@ -19,6 +20,10 @@ class LaraMultiAuthServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/multiauth.php' => config_path('multiauth.php'),
         ], 'config');
+
+        $this->commands([
+            SetupCommand::class,
+        ]);
 
         // Load routes, migrations, etc.
     }
