@@ -161,6 +161,7 @@ class ComposerStaticInit3e944b4a7cfe161c1750159f154a9af8
         ),
         'A' => 
         array (
+            'AhmedEbead\\LaraMultiAuth\\Tests\\' => 31,
             'AhmedEbead\\LaraMultiAuth\\' => 25,
         ),
     );
@@ -473,6 +474,10 @@ class ComposerStaticInit3e944b4a7cfe161c1750159f154a9af8
         'Brick\\Math\\' => 
         array (
             0 => __DIR__ . '/..' . '/brick/math/src',
+        ),
+        'AhmedEbead\\LaraMultiAuth\\Tests\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/tests',
         ),
         'AhmedEbead\\LaraMultiAuth\\' => 
         array (

@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'ahmedebead/laramultiauth',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-master',
+        'version' => 'dev-master',
+        'reference' => '34a3dc5a29469c2a15e742c4dde7aa4ae2e68c3f',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'ahmedebead/laramultiauth' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => '34a3dc5a29469c2a15e742c4dde7aa4ae2e68c3f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

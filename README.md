@@ -58,8 +58,6 @@ Update the `config/multiauth.php` file to configure models and SMS helper functi
 
 return [
 
-    'default_guard' => env('MULTIAUTH_DEFAULT_GUARD', 'web'),
-
     'models' => [
         'web' => App\Models\WebUser::class,
         'api' => App\Models\ApiUser::class,
@@ -79,25 +77,25 @@ Use the package functions via the `LaraMultiAuth` facade:
 use AhmedEbead\LaraMultiAuth\Facades\LaraMultiAuth;
 
 // Login
-$token = LaraMultiAuth::login([
+$token = LaraMultiAuth::guard('api')->guard('api')->login([
     'email' => 'user@example.com',
     'password' => 'password123',
 ]);
 
 // Register
-$user = LaraMultiAuth::register([
+$user = LaraMultiAuth::guard('api')->register([
     'email' => 'newuser@example.com',
     'password' => 'password123',
 ]);
 
 // Generate OTP
-$otp = LaraMultiAuth::generateOtp('1234567890');
+$otp = LaraMultiAuth::guard('api')->generateOtp('1234567890');
 
 // Verify OTP
-$isVerified = LaraMultiAuth::verifyOtp('1234567890', $otp);
+$isVerified = LaraMultiAuth::guard('api')->verifyOtp('1234567890', $otp);
 
 // Generate and send OTP
-$otp = LaraMultiAuth::generateAndSendOtp('1234567890');
+$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
 ```
 
 ## 5\. Models Implementation
@@ -188,7 +186,9 @@ The authentication methods are dynamically handled based on the guard specified 
 **Login with Email**
 
 ```php
-$token = LaraMultiAuth::login([
+// api is the guard you can change it to web or any another
+
+$token = LaraMultiAuth::guard('api')->login([
     'email' => 'user@example.com',
     'password' => 'password123',
 ]);
@@ -197,7 +197,9 @@ $token = LaraMultiAuth::login([
 **Register a New User**
 
 ```php
-$user = LaraMultiAuth::register([
+// api is the guard you can change it to web or any another
+
+$user = LaraMultiAuth::guard('api')->register([
     'email' => 'newuser@example.com',
     'password' => 'password123',
 ]);
@@ -206,14 +208,17 @@ $user = LaraMultiAuth::register([
 **Generate and Verify OTP**
 
 ```php
-$otp = LaraMultiAuth::generateOtp('1234567890');
-$isVerified = LaraMultiAuth::verifyOtp('1234567890', $otp);
+// api is the guard you can change it to web or any another
+
+$otp = LaraMultiAuth::guard('api')->generateOtp('1234567890');
+$isVerified = LaraMultiAuth::guard('api')->verifyOtp('1234567890', $otp);
 ```
 
 **Generate and Send OTP**
 
 ```php
-$otp = LaraMultiAuth::generateAndSendOtp('1234567890');
+// api is the guard you can change it to web or any another
+$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
 ```
 
 ## 9\. License

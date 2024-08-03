@@ -25,7 +25,10 @@
         "laravel": {
             "providers": [
                 "AhmedEbead\\LaraMultiAuth\\LaraMultiAuthServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "LaraMultiAuth": "AhmedEbead\\LaraMultiAuth\\Facades\\LaraMultiAuth"
+            }
         }
     },
     "scripts": {

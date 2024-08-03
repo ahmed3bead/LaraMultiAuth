@@ -10,12 +10,35 @@ use AhmedEbead\LaraMultiAuth\Services\OtpService;
 
 class AuthService
 {
+    protected static $guardName = null;
+
+    public static function guard($guard)
+    {
+        // Validate if the guard exists in the configuration
+        if (!Config::has("auth.guards.{$guard}")) {
+            throw new \InvalidArgumentException("Guard '{$guard}' is not defined in the `auth.php` configuration.");
+        }
+
+        self::$guardName = $guard;
+        return new static;
+    }
+
+    protected static function getGuardForRequest()
+    {
+        if (self::$guardName === null) {
+            throw new \Exception('Guard must be set using the guard() method before calling any authentication methods.');
+        }
+
+        return self::$guardName;
+    }
+
     public static function login(array $credentials)
     {
+
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
-        $model = new $modelClass(null, $guard);
 
+        $model = new $modelClass();
         return self::attemptLogin($credentials, $model, $guard);
     }
 
@@ -94,14 +117,21 @@ class AuthService
         return $otp;
     }
 
-    private static function getGuardForRequest()
-    {
-        // Example logic to determine the guard based on the current request or context.
-        return Config::get('multiauth.default_guard');
-    }
-
     private static function getModelClassForGuard($guard)
     {
-        return Config::get("multiauth.models.{$guard}");
+        $configModels = Config::get("multiauth.models");
+        if (empty($configModels)) {
+            throw new \Exception("You need to add guard {$guard} model in package config file `multiauth.php`");
+        }
+
+        if (!isset($configModels[$guard])) {
+            throw new \Exception("You need to add model for guard {$guard} in package config file `multiauth.php`");
+        }
+        $modelClass = $configModels[$guard];
+        if (!class_exists($modelClass)) {
+            throw new \Exception("Model class $modelClass does not exist.");
+        }
+
+        return $modelClass;
     }
 }
