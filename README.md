@@ -6,8 +6,8 @@
 * [Usage](#usage)
 * [Models Implementation](#models-implementation)
 * [Helper Functions](#helper-functions)
+* [Create Helper File](#create-helper-file)
 * [API and Web Authentication](#api-and-web-authentication)
-* [Examples](#examples)
 * [License](#license)
 
 ## 1\. Introduction
@@ -77,115 +77,6 @@ return [
 
 Use the package functions via the `LaraMultiAuth` facade:
 
-```php
-use AhmedEbead\LaraMultiAuth\Facades\LaraMultiAuth;
-
-// Login
-$token = LaraMultiAuth::guard('api')->login([
-    'email' => 'user@example.com',
-    'password' => 'password123',
-]);
-
-// Register
-$user = LaraMultiAuth::guard('api')->register([
-    'email' => 'newuser@example.com',
-    'password' => 'password123',
-    //.....other fields
-]);
-
-// Generate OTP
-$otp = LaraMultiAuth::guard('api')->generateOtp('1234567890');
-
-// Verify OTP
-$isVerified = LaraMultiAuth::guard('api')->verifyOtp('1234567890', $otp);
-
-// Generate and send OTP
-$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
-```
-
-## 5\. Models Implementation
-
-**BaseAuthModel**
-
-The `AhmedEbead\LaraMultiAuth\Models\BaseAuthModel` provides common authentication functionalities.
-
-**Concrete Models**
-
-Extend `BaseAuthModel` for each guard.
-
-**Web User Model**
-
-```php
-<?php
-
-namespace App\Models;
-
-use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
-
-class WebUser extends BaseAuthModel
-{
-    protected $guard = 'web';
-}
-```
-
-**API User Model**
-
-```php
-<?php
-
-namespace App\Models;
-
-use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
-
-class ApiUser extends BaseAuthModel
-{
-    protected $guard = 'api';
-}
-```
-
-**Admin User Model**
-
-```php
-<?php
-
-namespace App\Models;
-
-use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
-
-class AdminUser extends BaseAuthModel
-{
-    protected $guard = 'admin';
-}
-```
-
-## 6\. Helper Functions
-
-**Example SMS Helper Function**
-
-Add this helper function to your project to handle SMS sending:
-
-```php
-if (!function_exists('sendSmsHelperFunction')) {
-    function sendSmsHelperFunction($phone, $otp)
-    {
-        // Implement the SMS sending logic
-        // Example: using an external SMS service
-        // SmsService::send($phone, "Your OTP is: {$otp}");
-    }
-}
-```
-
-## 7\. API and Web Authentication
-
-The package supports both API (using Laravel Passport) and web authentication. The guard type determines the
-authentication method:
-
-* **Web Authentication:** Uses standard session-based login.
-* **API Authentication:** Uses Laravel Passport for token-based login.
-
-The authentication methods are dynamically handled based on the guard specified in the configuration.
-
-## 8\. Examples
 
 **Login with Email/phone or any another fields -- check config fields**
 
@@ -283,6 +174,138 @@ $data = [
 $token = LaraMultiAuth::guard('api')->resetPassword($data);
 ```
 
+
+## 5\. Models Implementation
+
+**BaseAuthModel**
+
+The `AhmedEbead\LaraMultiAuth\Models\BaseAuthModel` provides common authentication functionalities.
+
+**Concrete Models**
+
+Extend `BaseAuthModel` for each guard.
+
+**Web User Model**
+
+```php
+<?php
+
+namespace App\Models;
+
+use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
+
+class WebUser extends BaseAuthModel
+{
+    protected $guard = 'web';
+}
+```
+
+**API User Model**
+
+```php
+<?php
+
+namespace App\Models;
+
+use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
+
+class ApiUser extends BaseAuthModel
+{
+    protected $guard = 'api';
+}
+```
+
+**Admin User Model**
+
+```php
+<?php
+
+namespace App\Models;
+
+use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
+
+class AdminUser extends BaseAuthModel
+{
+    protected $guard = 'admin';
+}
+```
+
+## 6\. Helper Functions
+
+**Example SMS Helper Function**
+
+Add this helper function to your project as a helper function to handle SMS sending:
+
+```php
+if (!function_exists('sendSmsHelperFunction')) {
+    function sendSmsHelperFunction($phone, $otp)
+    {
+        // Implement the SMS sending logic
+        // Example: using an external SMS service
+        // SmsService::send($phone, "Your OTP is: {$otp}");
+    }
+}
+```
+
+## 7\. Create Helper File
+
+### A\. Create a New Helper File
+The first step to creating a helper in Laravel 10 is to create a new file in the app/Helpers directory.
+If this directory doesn't exist, create it.
+### B\. Add the Helper Function
+Once you’ve created the new helper file, you can add your helper function.
+A helper function is just a regular PHP function that you can call from anywhere in your Laravel application.
+
+* For example
+```php
+if (!function_exists('sendSmsHelperFunction')) {
+    function sendSmsHelperFunction($phone, $otp)
+    {
+        // Implement the SMS sending logic
+        // Example: using an external SMS service
+        // SmsService::send($phone, "Your OTP is: {$otp}");
+    }
+}
+```
+### C\. Load the Helper File
+After you’ve defined your helper function,
+you need to load the helper file so that Laravel knows about it.
+You can do this by adding an autoload entry to the composer.json file in your Laravel application.
+Open the composer.json file and add the following entry to the autoload section:
+
+```json
+"files": [
+"app/Helpers/helper.php"
+]
+```
+
+### D\. Use the Helper Function
+
+Now that you’ve defined your helper function and loaded the helper file, you can use the function anywhere in your Laravel application.
+For example, if you want to format a date string in your controller, 
+you could do the following:
+
+
+```php 
+
+class OrderController extends Controller
+{
+    public function index()
+    {
+        sendSmsHelperFunction(....);
+    }
+}
+```
+
+## 8\. API and Web Authentication
+
+The package supports both API (using Laravel Passport) and web authentication. The guard type determines the
+authentication method:
+
+* **Web Authentication:** Uses standard session-based login.
+* **API Authentication:** Uses Laravel Passport for token-based login.
+
+The authentication methods are dynamically handled based on the guard specified in the configuration.
 
 
 ## 9\. License
