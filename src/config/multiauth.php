@@ -1,18 +1,6 @@
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Default Guard
-    |--------------------------------------------------------------------------
-    |
-    | This option controls the default guard that will be used by the package.
-    |
-    */
-
-    'default_guard' => env('MULTIAUTH_DEFAULT_GUARD', 'web'),
-
     /*
     |--------------------------------------------------------------------------
     | Models Configuration

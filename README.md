@@ -57,11 +57,15 @@ Update the `config/multiauth.php` file to configure models and SMS helper functi
 <?php
 
 return [
-
-    'models' => [
-        'web' => App\Models\WebUser::class,
-        'api' => App\Models\ApiUser::class,
-        'admin' => App\Models\AdminUser::class,
+    'guards' => [
+        'web' => [
+            'model' => App\Models\User::class,
+            'authFields' => [
+                'username' => ['email','name'],
+                'password' => 'password'
+            ]
+        ],
+        // Add more guards and their respective models here
     ],
 
     'sms_helper_function' => env('SMS_HELPER_FUNCTION', 'sendSmsHelperFunction'),
