@@ -1,4 +1,5 @@
 # LaraMultiAuth Package Documentation (still under development)
+![LaraMultiAuth Logo](https://github.com/ahmed3bead/LaraMultiAuth/blob/master/ae.png)
 
 * [Introduction](#1-introduction)
 * [Installation](#2-installation)
