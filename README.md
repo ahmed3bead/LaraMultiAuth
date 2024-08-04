@@ -1,14 +1,14 @@
 # LaraMultiAuth Package Documentation (still under development)
 
-* [Introduction](#introduction)
-* [Installation](#installation)
-* [Configuration](#configuration)
-* [Usage](#usage)
-* [Models Implementation](#models-implementation)
-* [Helper Functions](#helper-functions)
-* [Create Helper File](#create-helper-file)
-* [API and Web Authentication](#api-and-web-authentication)
-* [License](#license)
+* [Introduction](#1-introduction)
+* [Installation](#2-installation)
+* [Configuration](#3-configuration)
+* [Usage](#4-usage)
+* [Models Implementation](#5-models-implementation)
+* [Helper Functions](#6-helper-functions)
+* [Create Helper File](#7-create-helper-file)
+* [API and Web Authentication](#8-api-and-web-authentication)
+* [License](#9-license)
 
 ## 1\. Introduction
 
