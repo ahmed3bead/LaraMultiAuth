@@ -40,10 +40,8 @@ class AuthService
 
     public static function login(array $credentials)
     {
-
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
-
         $model = new $modelClass();
         return self::attemptLogin($credentials, $model, $guard);
     }
@@ -51,61 +49,50 @@ class AuthService
     private static function attemptLogin(array $credentials, BaseAuthModel $model, $guard)
     {
         $driver = Config::get("auth.guards.{$guard}.driver");
-        $user = self::checkExistUser($credentials,$model);
-        dd($user);
-        if ($driver === 'passport') {
-            return self::apiLogin($credentials, $model, $guard);
+        $user = self::checkExistUser($credentials, $model, $guard);
+        if (!$user) {
+            return false;
         }
-
-        return self::webLogin($credentials, $guard);
+        if ($driver === 'passport') {
+            return self::apiLogin($guard, $user);
+        }
+        return self::webLogin($guard, $user);
     }
 
-    protected static function checkExistUser(array $credentials, BaseAuthModel $model, $guard){
+    protected static function checkExistUser(array $credentials, BaseAuthModel $model, $guard)
+    {
         $modelInstance = new $model;
         $authFields = Config::get("multiauth.guards.{$guard}.authFields");
-        dd($authFields);
-        $usernameFields = $credentials['username'];
-        $passwordField = $credentials['password'];
-
-        // Ensure at least one username field is provided in the credentials
-        $identifier = null;
-        foreach ($usernameFields as $field) {
-            if (isset($credentials[$field])) {
-                $identifier = $credentials[$field];
-                break;
-            }
-        }
-
-        if (!$identifier || !isset($credentials[$passwordField])) {
-            throw new \Exception("Invalid credentials provided.");
+        if (!$authFields) {
+            $authFields = [
+                'username' => ['email'],
+                'password' => 'password'
+            ];
         }
 
         // Find user by any of the username fields
         $query = $modelInstance->newQuery();
-        foreach ($usernameFields as $field) {
-            $query->orWhere($field, $identifier);
+        foreach ($authFields['username'] as $field) {
+            $query->orWhere($field, $credentials['username']);
         }
         $user = $query->first();
-    }
-
-    private static function webLogin(array $credentials, $guard)
-    {
-
-        if (Auth::guard($guard)->attempt($credentials)) {
-            return ['user' => Auth::guard($guard)->user()];
-        }
-        return null;
-    }
-
-    private static function apiLogin(array $credentials, BaseAuthModel $model, $guard)
-    {
-        $user = $model::where('email', $credentials['email'])->first();
         if ($user && Hash::check($credentials['password'], $user->password)) {
-            Auth::setUser($user);
-            return ['user' => Auth::guard($guard)->user(), 'token' => $user->createToken($guard)->accessToken];
+            return $user;
         }
-
         return false;
+    }
+
+    private static function webLogin($guard, $user)
+    {
+        Auth::guard($guard)->setUser($user);
+        return ['user' => Auth::guard($guard)->user()];
+    }
+
+    private static function apiLogin($guard, $user)
+    {
+        Auth::guard($guard)->setUser($user);
+        return ['user' => Auth::guard($guard)->user(), 'token' => $user->createToken($guard)->accessToken];
+
     }
 
     public static function register(array $data)
