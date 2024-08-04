@@ -14,35 +14,35 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
-    protected static $guardName = null;
+    protected static mixed $guard = null;
 
-    public static function guard($guard)
+    public static function guard($guard): static
     {
         // Validate if the guard exists in the configuration
         if (!Config::has("auth.guards.{$guard}")) {
             throw new \InvalidArgumentException("Guard '{$guard}' is not defined in the `auth.php` configuration.");
         }
 
-        self::$guardName = $guard;
+        self::$guard = $guard;
         return new static;
     }
 
-    protected static function getUserNameFields($guard)
-    {
-        $configModels = Config::get("multiauth.models.{$guard}");
-        dd($configModels);
-    }
-
+    /**
+     * @throws \Exception
+     */
     protected static function getGuardForRequest()
     {
-        if (self::$guardName === null) {
+        if (self::$guard === null) {
             throw new \Exception('Guard must be set using the guard() method before calling any authentication methods.');
         }
 
-        return self::$guardName;
+        return self::$guard;
     }
 
-    public static function login(array $credentials)
+    /**
+     * @throws \Exception
+     */
+    public static function login(array $credentials): bool|array
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
@@ -50,7 +50,10 @@ class AuthService
         return self::attemptLogin($credentials, $model, $guard);
     }
 
-    public static function phoneLogin(mixed $phone)
+    /**
+     * @throws \Exception
+     */
+    public static function phoneLogin(mixed $phone): bool
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
@@ -79,7 +82,7 @@ class AuthService
         return true;
     }
 
-    private static function attemptLogin(array $credentials, BaseAuthModel $model, $guard)
+    private static function attemptLogin(array $credentials, BaseAuthModel $model, $guard): bool|array
     {
         $driver = Config::get("auth.guards.{$guard}.driver");
         $user = self::checkExistUser($credentials, $model, $guard);
@@ -92,7 +95,7 @@ class AuthService
         return self::webLogin($guard, $user);
     }
 
-    protected static function checkExistUser(array $credentials, BaseAuthModel $model, $guard)
+    protected static function checkExistUser(array $credentials, BaseAuthModel $model, $guard): \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Builder|bool
     {
         $modelInstance = new $model;
         $authFields = Config::get("multiauth.guards.{$guard}.authFields");
@@ -115,20 +118,23 @@ class AuthService
         return false;
     }
 
-    private static function webLogin($guard, $user)
+    private static function webLogin($guard, $user): array
     {
         Auth::guard($guard)->setUser($user);
         return ['user' => Auth::guard($guard)->user()];
     }
 
-    private static function apiLogin($guard, $user)
+    private static function apiLogin($guard, $user): array
     {
         Auth::guard($guard)->setUser($user);
         return ['user' => Auth::guard($guard)->user(), 'token' => $user->createToken($guard)->accessToken];
 
     }
 
-    private static function verifyPhoneLogin($data)
+    /**
+     * @throws \Exception
+     */
+    private static function verifyPhoneLogin($data): array
     {
         $otp = OtpService::verifyOtp($data['phone'], $data['otp']);
 
@@ -162,6 +168,9 @@ class AuthService
         return $model;
     }
 
+    /**
+     * @throws \Exception
+     */
     public static function resetPassword(array $data)
     {
         $guard = self::getGuardForRequest();
@@ -182,7 +191,33 @@ class AuthService
         return $model;
     }
 
-    public static function loggedInUser()
+    /**
+     * @throws \Exception
+     */
+    public static function resetPasswordByPhone(array $data)
+    {
+        $guard = self::getGuardForRequest();
+        $modelClass = self::getModelClassForGuard($guard);
+
+        $otp = OtpService::verifyOtp($data['phone'], $data['otp']);
+        if (!$otp->status) {
+            throw ValidationException::withMessages([
+                'token' => [trans('passwords.token')],
+            ]);
+        }
+        $model = new $modelClass();
+        $model = $model->where('phone', $data['phone'])->first();
+        if ($model) {
+            $model->password = Hash::make($data['password']);
+            $model->save();
+        }
+        return $model;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public static function loggedInUser(): array
     {
         return ['user' => Auth::guard(self::getGuardForRequest())->user()];
     }
@@ -198,7 +233,23 @@ class AuthService
                 'token' => [trans('auth.too_many_otp')],
             ]);
         }
+        return $executed;
     }
+
+    public static function forgetPasswordByPhone(string $phone)
+    {
+        $executed = RateLimiter::attempt('send-otp:' . $phone, $perMinute = 1, function () use ($phone) {
+            self::generateAndSendOtp($phone);
+        });
+        if (!$executed) {
+            throw ValidationException::withMessages([
+                'token' => [trans('auth.too_many_otp')],
+            ]);
+        }
+
+        return $executed;
+    }
+
 
     public static function generateOtp($phone)
     {
@@ -222,6 +273,9 @@ class AuthService
         return $otp;
     }
 
+    /**
+     * @throws \Exception
+     */
     private static function getModelClassForGuard($guard)
     {
 
@@ -248,19 +302,19 @@ class AuthService
         return $guardConfiguration;
     }
 
-    private function sendMail($email)
+    private function sendMail($email): bool
     {
         $otp = self::generateOtp($email);
-        Mail::to($email)->send(new SendMail($otp));
+        sendOtpToMail($email, $otp);
         return true;
     }
 
-    private function logout($email)
+    private function logout(): bool
     {
         $user = Auth::guard(self::getGuardForRequest())->user();
         $user->tokens()->delete();
         request()->session()->invalidate(); // Invalidate the session
-        request()>session()->regenerateToken(); // Regenerate CSRF token
+        request() > session()->regenerateToken(); // Regenerate CSRF token
         return true;
     }
 }

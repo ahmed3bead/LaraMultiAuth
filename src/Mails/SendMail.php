@@ -36,7 +36,7 @@ class SendMail extends Mailable
     public function build()
     {
         return $this->subject(trans(env('APP_NAME', 'Laravel')." OTP Code"))
-            ->markdown($this->isLogin ? 'Email.loginOtp' : 'Email.resetPassword')
+            ->markdown($this->isLogin ? 'laramultiauth::email.loginOtp' : 'laramultiauth::email.resetPassword')
             ->with(['token' => $this->token]);
     }
 }

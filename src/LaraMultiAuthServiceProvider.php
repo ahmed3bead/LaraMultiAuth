@@ -17,7 +17,12 @@ class LaraMultiAuthServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'laramultiauth');
 
+        // Publish the views
+        $this->publishes([
+            __DIR__.'/resources/views' => resource_path('views/ahmedebead/laramultiauth'),
+        ], 'views');
         $this->publishes([
             __DIR__.'/config/multiauth.php' => config_path('multiauth.php'),
         ], 'config');

@@ -1,28 +1,29 @@
 # LaraMultiAuth Package Documentation (still under development)
 
-*   [Introduction](#introduction)
-*   [Installation](#installation)
-*   [Configuration](#configuration)
-*   [Usage](#usage)
-*   [Models Implementation](#models-implementation)
-*   [Helper Functions](#helper-functions)
-*   [API and Web Authentication](#api-and-web-authentication)
-*   [Examples](#examples)
-*   [License](#license)
+* [Introduction](#introduction)
+* [Installation](#installation)
+* [Configuration](#configuration)
+* [Usage](#usage)
+* [Models Implementation](#models-implementation)
+* [Helper Functions](#helper-functions)
+* [API and Web Authentication](#api-and-web-authentication)
+* [Examples](#examples)
+* [License](#license)
 
 ## 1\. Introduction
 
-LaraMultiAuth is a Laravel package designed to handle comprehensive authentication features. It supports both API and web authentication, including multi-guard setups and OTP verification for email and phone.
+LaraMultiAuth is a Laravel package designed to handle comprehensive authentication features. It supports both API and
+web authentication, including multi-guard setups and OTP verification for email and phone.
 
 ## 2\. Installation
 
 To install the `LaraMultiAuth` package, follow these steps:
 
-1.  **Add the Package to Your Project**
+1. **Add the Package to Your Project**
 
-    ```bash
-    composer require ahmedebead/laramultiauth
-    ```
+   ```bash
+   composer require ahmedebead/laramultiauth
+   ```
 
 ## Setup
 
@@ -34,20 +35,19 @@ php artisan passport:install # If needed
 
 ```
 
-2.  **Register the Service Provider**
+2. **Register the Service Provider**
 
-    Add the following line to the `providers` array in `config/app.php`:
+   Add the following line to the `providers` array in `config/app.php`:
 
-    ```php
-    AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider::class,
-    ```
+   ```php
+   AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider::class,
+   ```
 
-3.  **Publish the Configuration File**
+3. **Publish the Configuration File**
 
-    ```bash
-    php artisan vendor:publish --provider="AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider"
-    ```
-
+   ```bash
+   php artisan vendor:publish --provider="AhmedEbead\LaraMultiAuth\LaraMultiAuthServiceProvider"
+   ```
 
 ## 3\. Configuration
 
@@ -90,6 +90,7 @@ $token = LaraMultiAuth::guard('api')->login([
 $user = LaraMultiAuth::guard('api')->register([
     'email' => 'newuser@example.com',
     'password' => 'password123',
+    //.....other fields
 ]);
 
 // Generate OTP
@@ -123,7 +124,7 @@ use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
 
 class WebUser extends BaseAuthModel
 {
-    protected $guardName = 'web';
+    protected $guard = 'web';
 }
 ```
 
@@ -138,7 +139,7 @@ use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
 
 class ApiUser extends BaseAuthModel
 {
-    protected $guardName = 'api';
+    protected $guard = 'api';
 }
 ```
 
@@ -153,7 +154,7 @@ use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
 
 class AdminUser extends BaseAuthModel
 {
-    protected $guardName = 'admin';
+    protected $guard = 'admin';
 }
 ```
 
@@ -174,14 +175,13 @@ if (!function_exists('sendSmsHelperFunction')) {
 }
 ```
 
-
-
 ## 7\. API and Web Authentication
 
-The package supports both API (using Laravel Passport) and web authentication. The guard type determines the authentication method:
+The package supports both API (using Laravel Passport) and web authentication. The guard type determines the
+authentication method:
 
-*   **Web Authentication:** Uses standard session-based login.
-*   **API Authentication:** Uses Laravel Passport for token-based login.
+* **Web Authentication:** Uses standard session-based login.
+* **API Authentication:** Uses Laravel Passport for token-based login.
 
 The authentication methods are dynamically handled based on the guard specified in the configuration.
 
@@ -214,16 +214,67 @@ $user = LaraMultiAuth::guard('api')->register([
 
 ```php
 // api is the guard you can change it to web or any another
+$identifier = "010548569847";
+$otp = LaraMultiAuth::guard('api')->generateOtp($identifier);
 
-$otp = LaraMultiAuth::guard('api')->generateOtp('1234567890');
-$isVerified = LaraMultiAuth::guard('api')->verifyOtp('1234567890', $otp);
+$isVerified = LaraMultiAuth::guard('api')->verifyOtp($identifier, $otp);
 ```
 
 **Generate and Send OTP**
 
+***here if you pass phone number sms logic will run if you pass email will sent to given email***
+
+```php
+// api is the guard you can change it to web or any another LaraMultiAuth::guard('api')
+$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
+
+$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('test@mail.com');
+
+```
+
+**Get Current logged in user data**
+
 ```php
 // api is the guard you can change it to web or any another
-$otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
+
+$token = LaraMultiAuth::guard('api')->loggedInUser();
+```
+
+**Logout**
+
+```php
+// api is the guard you can change it to web or any another
+
+$token = LaraMultiAuth::guard('api')->logout();
+```
+
+**Forget Password**
+
+```php
+// api is the guard you can change it to web or any another
+
+$token = LaraMultiAuth::guard('api')->forgetPassword($email);
+$token = LaraMultiAuth::guard('api')->forgetPasswordByPhone($phone);
+```
+
+**Reset Password**
+
+```php
+// api is the guard you can change it to web or any another
+$data = [
+    'email'=>'test@test.com',
+    'otp'=>125487
+];
+$token = LaraMultiAuth::guard('api')->resetPassword($data);
+```
+
+```php
+// api is the guard you can change it to web or any another
+$data = [
+    'phone'=>01097548264,
+    'otp'=>125487
+];
+$token = LaraMultiAuth::guard('api')->resetPasswordByPhone($data);
 ```
 
 ## 9\. License
