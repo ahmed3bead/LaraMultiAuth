@@ -61,7 +61,7 @@ return [
         'web' => [
             'model' => App\Models\User::class,
             'authFields' => [
-                'username' => ['email','name'],
+                'username' => ['email','name'], // any number of fields name to check
                 'password' => 'password'
             ]
         ],
@@ -187,13 +187,13 @@ The authentication methods are dynamically handled based on the guard specified 
 
 ## 8\. Examples
 
-**Login with Email**
+**Login with Email/phone or any another fields -- check config fields**
 
 ```php
 // api is the guard you can change it to web or any another
 
 $token = LaraMultiAuth::guard('api')->login([
-    'email' => 'user@example.com',
+    'username' => 'user@example.com',
     'password' => 'password123',
 ]);
 ```
@@ -206,6 +206,7 @@ $token = LaraMultiAuth::guard('api')->login([
 $user = LaraMultiAuth::guard('api')->register([
     'email' => 'newuser@example.com',
     'password' => 'password123',
+    //.....other fields
 ]);
 ```
 
