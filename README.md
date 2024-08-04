@@ -81,7 +81,7 @@ Use the package functions via the `LaraMultiAuth` facade:
 use AhmedEbead\LaraMultiAuth\Facades\LaraMultiAuth;
 
 // Login
-$token = LaraMultiAuth::guard('api')->guard('api')->login([
+$token = LaraMultiAuth::guard('api')->login([
     'email' => 'user@example.com',
     'password' => 'password123',
 ]);
