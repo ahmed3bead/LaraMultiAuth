@@ -2,11 +2,13 @@
 
 namespace AhmedEbead\LaraMultiAuth\Services;
 
+use http\Env\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
 use AhmedEbead\LaraMultiAuth\Services\OtpService;
+use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
@@ -119,9 +121,39 @@ class AuthService
         return $model;
     }
 
-    public static function forgetPassword(array $data)
+    public static function forgetPassword(string $email)
     {
-        // Handle the logic for forgetting the password
+        $request = new \Illuminate\Support\Facades\Request();
+        $guard = self::getGuardForRequest();
+        $modelClass = self::getModelClassForGuard($guard);
+        $model = new $modelClass();
+        $request->merge([
+            'identifier' => $email // This will be either phone or email
+        ]);
+
+        $identifier = $request->input('identifier');
+
+        // Determine if identifier is a phone number or email
+        $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            ? $model->where('email', $identifier)->first()
+            : $model->where('phone', $identifier)->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found.'], 404);
+        }
+
+        // Generate a password reset token
+        $token = Password::createToken($user);
+
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            // Send reset link via email
+            $user->notify(new ResetPasswordEmailNotification($token));
+        } else {
+            // Send reset link via SMS
+            $user->notify(new ResetPasswordSmsNotification($token));
+        }
+
+        return response()->json(['message' => 'Reset link sent.'], 200);
     }
 
     public static function generateOtp($phone)
@@ -146,10 +178,8 @@ class AuthService
 
     private static function getModelClassForGuard($guard)
     {
-        $configModels = Config::get("multiauth.guards");
-        if (empty($configModels)) {
-            throw new \Exception("You need to add guard {$guard} in package config file `multiauth.php`");
-        }
+
+        $configModels = self::getGuardConfiguration($guard);
 
         if (!isset($configModels[$guard]['model'])) {
             throw new \Exception("You need to add model for guard {$guard} in package config file `multiauth.php`");
@@ -160,5 +190,15 @@ class AuthService
         }
 
         return $modelClass;
+    }
+
+
+    private static function getGuardConfiguration($guard)
+    {
+        $guardConfiguration = Config::get("multiauth.guards");
+        if (empty($guardConfiguration)) {
+            throw new \Exception("You need to add guard {$guard} in package config file `multiauth.php`");
+        }
+        return $guardConfiguration;
     }
 }
