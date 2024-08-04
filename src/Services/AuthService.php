@@ -2,13 +2,15 @@
 
 namespace AhmedEbead\LaraMultiAuth\Services;
 
-use http\Env\Request;
+use AhmedEbead\LaraMultiAuth\Enums\UserOtpNotifyTypes;
+use AhmedEbead\LaraMultiAuth\Mails\SendMail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
 use AhmedEbead\LaraMultiAuth\Models\BaseAuthModel;
-use AhmedEbead\LaraMultiAuth\Services\OtpService;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
@@ -46,6 +48,35 @@ class AuthService
         $modelClass = self::getModelClassForGuard($guard);
         $model = new $modelClass();
         return self::attemptLogin($credentials, $model, $guard);
+    }
+
+    public static function phoneLogin(mixed $phone)
+    {
+        $guard = self::getGuardForRequest();
+        $modelClass = self::getModelClassForGuard($guard);
+        $otp_notify_type = Config::get("multiauth.guards.{$guard}.otp_notify_type");
+        $model = new $modelClass();
+        $executed = RateLimiter::attempt('send-otp:' . $phone, $perMinute = 1, function () use ($phone, $modelClass, $otp_notify_type) {
+            $otp = self::generateOtp($phone);
+            $model = new $modelClass();
+            $user = $model->where('phone', $phone)->first();
+            if ($otp_notify_type == UserOtpNotifyTypes::SMS) {
+                $smsHelperFunction = Config::get('multiauth.sms_helper_function');
+                if (function_exists($smsHelperFunction)) {
+                    $smsHelperFunction($phone, $otp);
+                } else {
+                    throw new \Exception("Please add sms_helper_function to config file and to sys helper functions");
+                }
+            } else {
+                Mail::to($user->email)->send(new SendMail($otp, true));
+            }
+        });
+        if (!$executed) {
+            throw ValidationException::withMessages([
+                'token' => [trans('auth.too_many_otp')],
+            ]);
+        }
+        return true;
     }
 
     private static function attemptLogin(array $credentials, BaseAuthModel $model, $guard)
@@ -97,6 +128,29 @@ class AuthService
 
     }
 
+    private static function verifyPhoneLogin($data)
+    {
+        $otp = OtpService::verifyOtp($data['phone'], $data['otp']);
+
+        if (!$otp->status) {
+            throw ValidationException::withMessages([
+                'token' => [$otp->message],
+            ]);
+        }
+
+        $guard = self::getGuardForRequest();
+        $modelClass = self::getModelClassForGuard($guard);
+        $driver = Config::get("auth.guards.{$guard}.driver");
+        $model = new $modelClass();
+
+        $user = $model->where('phone', $data['phone'])->first();
+
+        if ($driver === 'passport') {
+            return self::apiLogin($guard, $user);
+        }
+        return self::webLogin($guard, $user);
+    }
+
     public static function register(array $data)
     {
         $guard = self::getGuardForRequest();
@@ -112,6 +166,13 @@ class AuthService
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
+
+        $otp = OtpService::verifyOtp($data['email'], $data['otp']);
+        if (!$otp->status) {
+            throw ValidationException::withMessages([
+                'token' => [trans('passwords.token')],
+            ]);
+        }
         $model = new $modelClass();
         $model = $model->where('email', $data['email'])->first();
         if ($model) {
@@ -121,39 +182,22 @@ class AuthService
         return $model;
     }
 
+    public static function loggedInUser()
+    {
+        return ['user' => Auth::guard(self::getGuardForRequest())->user()];
+    }
+
     public static function forgetPassword(string $email)
     {
-        $request = new \Illuminate\Support\Facades\Request();
-        $guard = self::getGuardForRequest();
-        $modelClass = self::getModelClassForGuard($guard);
-        $model = new $modelClass();
-        $request->merge([
-            'identifier' => $email // This will be either phone or email
-        ]);
+        $executed = RateLimiter::attempt('send-otp:' . $email, $perMinute = 1, function () use ($email) {
+            $this->sendMail($email);
+        });
 
-        $identifier = $request->input('identifier');
-
-        // Determine if identifier is a phone number or email
-        $user = filter_var($identifier, FILTER_VALIDATE_EMAIL)
-            ? $model->where('email', $identifier)->first()
-            : $model->where('phone', $identifier)->first();
-
-        if (!$user) {
-            return response()->json(['error' => 'User not found.'], 404);
+        if (!$executed) {
+            throw ValidationException::withMessages([
+                'token' => [trans('auth.too_many_otp')],
+            ]);
         }
-
-        // Generate a password reset token
-        $token = Password::createToken($user);
-
-        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
-            // Send reset link via email
-            $user->notify(new ResetPasswordEmailNotification($token));
-        } else {
-            // Send reset link via SMS
-            $user->notify(new ResetPasswordSmsNotification($token));
-        }
-
-        return response()->json(['message' => 'Reset link sent.'], 200);
     }
 
     public static function generateOtp($phone)
@@ -172,6 +216,8 @@ class AuthService
         $smsHelperFunction = Config::get('multiauth.sms_helper_function');
         if (function_exists($smsHelperFunction)) {
             $smsHelperFunction($phone, $otp);
+        } else {
+            throw new \Exception("Please add sms_helper_function to config file and to sys helper functions");
         }
         return $otp;
     }
@@ -200,5 +246,21 @@ class AuthService
             throw new \Exception("You need to add guard {$guard} in package config file `multiauth.php`");
         }
         return $guardConfiguration;
+    }
+
+    private function sendMail($email)
+    {
+        $otp = self::generateOtp($email);
+        Mail::to($email)->send(new SendMail($otp));
+        return true;
+    }
+
+    private function logout($email)
+    {
+        $user = Auth::guard(self::getGuardForRequest())->user();
+        $user->tokens()->delete();
+        request()->session()->invalidate(); // Invalidate the session
+        request()>session()->regenerateToken(); // Regenerate CSRF token
+        return true;
     }
 }

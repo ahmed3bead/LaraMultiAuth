@@ -13,9 +13,10 @@ return [
 
     'guards' => [
         'web' => [
-            'model' => App\Models\User::class,
+            'model' => \AhmedEbead\LaraMultiAuth\Models\User::class, // change to you user model
+            'otp_notify_type' => 'email',
             'authFields' => [
-                'username' => ['email','name'],
+                'username' => ['email', 'name'],
                 'password' => 'password'
             ]
         ],
