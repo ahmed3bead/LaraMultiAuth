@@ -23,9 +23,14 @@ return [
     |
     */
 
-    'models' => [
-//        'web' => App\Models\WebUser::class,
-//        'api' => App\Models\ApiUser::class,
+    'guards' => [
+        'web' => [
+            'model' => App\Models\User::class,
+            'authFields' => [
+                'username' => ['email','name'],
+                'password' => 'password'
+            ]
+        ],
         // Add more guards and their respective models here
     ],
 

@@ -23,6 +23,12 @@ class AuthService
         return new static;
     }
 
+    protected static function getUserNameFields($guard)
+    {
+        $configModels = Config::get("multiauth.models.{$guard}");
+        dd($configModels);
+    }
+
     protected static function getGuardForRequest()
     {
         if (self::$guardName === null) {
@@ -45,25 +51,58 @@ class AuthService
     private static function attemptLogin(array $credentials, BaseAuthModel $model, $guard)
     {
         $driver = Config::get("auth.guards.{$guard}.driver");
-
+        $user = self::checkExistUser($credentials,$model);
+        dd($user);
         if ($driver === 'passport') {
-            return self::apiLogin($credentials, $model);
+            return self::apiLogin($credentials, $model, $guard);
         }
 
         return self::webLogin($credentials, $guard);
     }
 
-    private static function webLogin(array $credentials, $guard)
-    {
-        return Auth::guard($guard)->attempt($credentials);
+    protected static function checkExistUser(array $credentials, BaseAuthModel $model, $guard){
+        $modelInstance = new $model;
+        $authFields = Config::get("multiauth.guards.{$guard}.authFields");
+        dd($authFields);
+        $usernameFields = $credentials['username'];
+        $passwordField = $credentials['password'];
+
+        // Ensure at least one username field is provided in the credentials
+        $identifier = null;
+        foreach ($usernameFields as $field) {
+            if (isset($credentials[$field])) {
+                $identifier = $credentials[$field];
+                break;
+            }
+        }
+
+        if (!$identifier || !isset($credentials[$passwordField])) {
+            throw new \Exception("Invalid credentials provided.");
+        }
+
+        // Find user by any of the username fields
+        $query = $modelInstance->newQuery();
+        foreach ($usernameFields as $field) {
+            $query->orWhere($field, $identifier);
+        }
+        $user = $query->first();
     }
 
-    private static function apiLogin(array $credentials, BaseAuthModel $model)
+    private static function webLogin(array $credentials, $guard)
+    {
+
+        if (Auth::guard($guard)->attempt($credentials)) {
+            return ['user' => Auth::guard($guard)->user()];
+        }
+        return null;
+    }
+
+    private static function apiLogin(array $credentials, BaseAuthModel $model, $guard)
     {
         $user = $model::where('email', $credentials['email'])->first();
-
         if ($user && Hash::check($credentials['password'], $user->password)) {
-            return $user->createToken('Personal Access Token')->accessToken;
+            Auth::setUser($user);
+            return ['user' => Auth::guard($guard)->user(), 'token' => $user->createToken($guard)->accessToken];
         }
 
         return false;
@@ -73,7 +112,7 @@ class AuthService
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
-        $model = new $modelClass(null, $guard);
+        $model = new $modelClass();
         $model->fill($data);
         $model->password = Hash::make($data['password']);
         $model->save();
@@ -84,7 +123,8 @@ class AuthService
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
-        $model = $modelClass::where('email', $data['email'])->first();
+        $model = new $modelClass();
+        $model = $model->where('email', $data['email'])->first();
         if ($model) {
             $model->password = Hash::make($data['password']);
             $model->save();
@@ -119,15 +159,15 @@ class AuthService
 
     private static function getModelClassForGuard($guard)
     {
-        $configModels = Config::get("multiauth.models");
+        $configModels = Config::get("multiauth.guards");
         if (empty($configModels)) {
-            throw new \Exception("You need to add guard {$guard} model in package config file `multiauth.php`");
+            throw new \Exception("You need to add guard {$guard} in package config file `multiauth.php`");
         }
 
-        if (!isset($configModels[$guard])) {
+        if (!isset($configModels[$guard]['model'])) {
             throw new \Exception("You need to add model for guard {$guard} in package config file `multiauth.php`");
         }
-        $modelClass = $configModels[$guard];
+        $modelClass = $configModels[$guard]['model'];
         if (!class_exists($modelClass)) {
             throw new \Exception("Model class $modelClass does not exist.");
         }

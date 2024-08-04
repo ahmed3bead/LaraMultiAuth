@@ -9,12 +9,12 @@ class OtpService
 {
     public static function generateOtp($phone)
     {
-        return Otp::generate($phone,'numeric', 6, 15);
+        return (new Otp)->generate($phone,'numeric', 6, 15);
     }
 
     public static function verifyOtp($phone, $otp)
     {
-        return Otp::validate($phone, $otp);
+        return (new Otp)->validate($phone, $otp);
     }
 
     public static function sendSms($phone, $otp)
