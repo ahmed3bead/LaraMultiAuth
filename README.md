@@ -213,8 +213,9 @@ $user = LaraMultiAuth::guard('api')->register([
 **Generate and Verify OTP**
 
 ```php
+//By phone or email
 // api is the guard you can change it to web or any another
-$identifier = "010548569847";
+$identifier = "010548569847"; // can be email $identifier = "test@mail.com";
 $otp = LaraMultiAuth::guard('api')->generateOtp($identifier);
 
 $isVerified = LaraMultiAuth::guard('api')->verifyOtp($identifier, $otp);
@@ -225,6 +226,7 @@ $isVerified = LaraMultiAuth::guard('api')->verifyOtp($identifier, $otp);
 ***here if you pass phone number sms logic will run if you pass email will sent to given email***
 
 ```php
+//By phone or email
 // api is the guard you can change it to web or any another LaraMultiAuth::guard('api')
 $otp = LaraMultiAuth::guard('api')->generateAndSendOtp('1234567890');
 
@@ -252,30 +254,36 @@ $token = LaraMultiAuth::guard('api')->logout();
 
 ```php
 // api is the guard you can change it to web or any another
-
+//By phone or email
 $token = LaraMultiAuth::guard('api')->forgetPassword($email);
-$token = LaraMultiAuth::guard('api')->forgetPasswordByPhone($phone);
+$token = LaraMultiAuth::guard('api')->forgetPassword($phone);
 ```
 
 **Reset Password**
 
 ```php
+//By phone or email
 // api is the guard you can change it to web or any another
 $data = [
-    'email'=>'test@test.com',
+    'identifier'=>'test@test.com', // can be phone number
     'otp'=>125487
 ];
 $token = LaraMultiAuth::guard('api')->resetPassword($data);
 ```
-
+Or you can add any fields name, but you must create otp by this field data
 ```php
 // api is the guard you can change it to web or any another
+
+$otp = LaraMultiAuth::guard('api')->generateOtp('ahmed ebead');
 $data = [
-    'phone'=>01097548264,
-    'otp'=>125487
+    'identifier_field_name'=>'name'
+    'identifier'=>'ahmed ebead', // can be phone number
+    'otp'=>$otp
 ];
-$token = LaraMultiAuth::guard('api')->resetPasswordByPhone($data);
+$token = LaraMultiAuth::guard('api')->resetPassword($data);
 ```
+
+
 
 ## 9\. License
 

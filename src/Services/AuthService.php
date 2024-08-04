@@ -168,6 +168,30 @@ class AuthService
         return $model;
     }
 
+    public static function forgetPassword($identifier)
+    {
+        $executed = RateLimiter::attempt('send-otp:' . $identifier, $perMinute = 1, function () use ($identifier) {
+            $otp = self::generateOtp($identifier);
+            if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+                $smsHelperFunction = Config::get('multiauth.sms_helper_function');
+                if (function_exists($smsHelperFunction)) {
+                    return $smsHelperFunction($identifier, $otp);
+                }
+                throw new \Exception("SMS helper function not defined or does not exist.");
+            } else {
+                sendOtpToMail($identifier, $otp);
+                return true;
+            }
+        });
+
+        if (!$executed) {
+            throw ValidationException::withMessages([
+                'token' => [trans('auth.too_many_otp')],
+            ]);
+        }
+        return $executed;
+    }
+
     /**
      * @throws \Exception
      */
@@ -176,14 +200,21 @@ class AuthService
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
 
-        $otp = OtpService::verifyOtp($data['email'], $data['otp']);
+        $otp = OtpService::verifyOtp($data['identifier'], $data['otp']);
         if (!$otp->status) {
             throw ValidationException::withMessages([
                 'token' => [trans('passwords.token')],
             ]);
         }
         $model = new $modelClass();
-        $model = $model->where('email', $data['email'])->first();
+        if (isset($data['identifier_field_name'])) {
+            $model = $model->where($data['identifier_field_name'], $data['identifier'])->first();
+        } elseif (filter_var($data['identifier'], FILTER_VALIDATE_EMAIL)) {
+            $model = $model->where('phone', $data['identifier'])->first();
+        } else {
+            $model = $model->where('phone', $data['identifier'])->first();
+        }
+
         if ($model) {
             $model->password = Hash::make($data['password']);
             $model->save();
@@ -191,28 +222,6 @@ class AuthService
         return $model;
     }
 
-    /**
-     * @throws \Exception
-     */
-    public static function resetPasswordByPhone(array $data)
-    {
-        $guard = self::getGuardForRequest();
-        $modelClass = self::getModelClassForGuard($guard);
-
-        $otp = OtpService::verifyOtp($data['phone'], $data['otp']);
-        if (!$otp->status) {
-            throw ValidationException::withMessages([
-                'token' => [trans('passwords.token')],
-            ]);
-        }
-        $model = new $modelClass();
-        $model = $model->where('phone', $data['phone'])->first();
-        if ($model) {
-            $model->password = Hash::make($data['password']);
-            $model->save();
-        }
-        return $model;
-    }
 
     /**
      * @throws \Exception
@@ -220,34 +229,6 @@ class AuthService
     public static function loggedInUser(): array
     {
         return ['user' => Auth::guard(self::getGuardForRequest())->user()];
-    }
-
-    public static function forgetPassword(string $email)
-    {
-        $executed = RateLimiter::attempt('send-otp:' . $email, $perMinute = 1, function () use ($email) {
-            $this->sendMail($email);
-        });
-
-        if (!$executed) {
-            throw ValidationException::withMessages([
-                'token' => [trans('auth.too_many_otp')],
-            ]);
-        }
-        return $executed;
-    }
-
-    public static function forgetPasswordByPhone(string $phone)
-    {
-        $executed = RateLimiter::attempt('send-otp:' . $phone, $perMinute = 1, function () use ($phone) {
-            self::generateAndSendOtp($phone);
-        });
-        if (!$executed) {
-            throw ValidationException::withMessages([
-                'token' => [trans('auth.too_many_otp')],
-            ]);
-        }
-
-        return $executed;
     }
 
 
@@ -261,16 +242,19 @@ class AuthService
         return OtpService::verifyOtp($phone, $otp);
     }
 
-    public static function generateAndSendOtp($phone)
+    public static function generateAndSendOtp($identifier)
     {
-        $otp = OtpService::generateOtp($phone);
-        $smsHelperFunction = Config::get('multiauth.sms_helper_function');
-        if (function_exists($smsHelperFunction)) {
-            $smsHelperFunction($phone, $otp);
+        $otp = OtpService::generateOtp($identifier);
+        if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $smsHelperFunction = Config::get('multiauth.sms_helper_function');
+            if (function_exists($smsHelperFunction)) {
+                return $smsHelperFunction($identifier, $otp);
+            }
+            throw new \Exception("SMS helper function not defined or does not exist.");
         } else {
-            throw new \Exception("Please add sms_helper_function to config file and to sys helper functions");
+            sendOtpToMail($identifier, $otp);
+            return $otp;
         }
-        return $otp;
     }
 
     /**
