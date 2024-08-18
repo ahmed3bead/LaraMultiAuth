@@ -164,11 +164,11 @@ class AuthService extends BaseService
             if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
                 $smsHelperFunction = Config::get('multiauth.sms_helper_function');
                 if (function_exists($smsHelperFunction)) {
-                    return $smsHelperFunction($identifier, $otp);
+                    return $smsHelperFunction($identifier, $otp->token);
                 }
                 throw new \Exception("SMS helper function not defined or does not exist.");
             } else {
-                parent::sendOtpToMail($identifier, $otp);
+                parent::sendOtpToMail($identifier, $otp->token);
                 return true;
             }
         });
@@ -241,7 +241,7 @@ class AuthService extends BaseService
             }
             throw new \Exception("SMS helper function not defined or does not exist.");
         } else {
-            parent::sendOtpToMail($identifier, $otp);
+            parent::sendOtpToMail($identifier, $otp->token);
             return $otp;
         }
     }
@@ -250,7 +250,7 @@ class AuthService extends BaseService
     private function sendMail($email): bool
     {
         $otp = self::generateOtp($email);
-        parent::sendOtpToMail($email, $otp);
+        parent::sendOtpToMail($email, $otp->token);
         return true;
     }
 
