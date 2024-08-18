@@ -210,7 +210,7 @@ class AuthService
         if (isset($data['identifier_field_name'])) {
             $model = $model->where($data['identifier_field_name'], $data['identifier'])->first();
         } elseif (filter_var($data['identifier'], FILTER_VALIDATE_EMAIL)) {
-            $model = $model->where('phone', $data['identifier'])->first();
+            $model = $model->where('email', $data['identifier'])->first();
         } else {
             $model = $model->where('phone', $data['identifier'])->first();
         }
