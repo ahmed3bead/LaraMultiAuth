@@ -5,7 +5,7 @@ namespace AhmedEbead\LaraMultiAuth\Services;
 use Illuminate\Support\Facades\Config;
 use Ichtrojan\Otp\Otp;
 
-class OtpService
+class OtpService extends BaseService
 {
     /**
      * @throws \Exception
