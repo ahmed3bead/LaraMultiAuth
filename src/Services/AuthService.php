@@ -55,12 +55,12 @@ class AuthService extends BaseService
             if ($otp_notify_type == UserOtpNotifyTypes::SMS) {
                 $smsHelperFunction = Config::get('multiauth.sms_helper_function');
                 if (function_exists($smsHelperFunction)) {
-                    $smsHelperFunction($phone, $otp);
+                    $smsHelperFunction($phone, $otp->token);
                 } else {
                     throw new \Exception("Please add sms_helper_function to config file and to sys helper functions");
                 }
             } else {
-                Mail::to($user->email)->send(new SendMail($otp, true));
+                Mail::to($user->email)->send(new SendMail($otp->token, true));
             }
         });
         if (!$executed) {
@@ -237,7 +237,7 @@ class AuthService extends BaseService
         if (!filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
             $smsHelperFunction = Config::get('multiauth.sms_helper_function');
             if (function_exists($smsHelperFunction)) {
-                return $smsHelperFunction($identifier, $otp);
+                return $smsHelperFunction($identifier, $otp->token);
             }
             throw new \Exception("SMS helper function not defined or does not exist.");
         } else {
