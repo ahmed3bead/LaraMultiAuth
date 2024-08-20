@@ -184,17 +184,19 @@ class AuthService extends BaseService
     /**
      * @throws \Exception
      */
-    public static function resetPassword(array $data)
+    public static function resetPassword(array $data,$verifyOtp = false)
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
-
-        $otp = OtpService::verifyOtp($data['identifier'], $data['otp']);
-        if (!$otp->status) {
-            throw ValidationException::withMessages([
-                'token' => [trans('passwords.token')],
-            ]);
+        if($verifyOtp){
+            $otp = OtpService::verifyOtp($data['identifier'], $data['otp']);
+            if (!$otp->status) {
+                throw ValidationException::withMessages([
+                    'token' => [trans('passwords.token')],
+                ]);
+            }
         }
+
         $model = new $modelClass();
         if (isset($data['identifier_field_name'])) {
             $model = $model->where($data['identifier_field_name'], $data['identifier'])->first();
