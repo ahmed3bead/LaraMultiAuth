@@ -223,6 +223,9 @@ class AuthService extends BaseService
     }
 
 
+    /**
+     * @throws \Exception
+     */
     public static function generateOtp($phone)
     {
         return OtpService::generateOtp($phone);
@@ -233,6 +236,9 @@ class AuthService extends BaseService
         return OtpService::verifyOtp($phone, $otp);
     }
 
+    /**
+     * @throws \Exception
+     */
     public static function generateAndSendOtp($identifier)
     {
         $otp = OtpService::generateOtp($identifier);
@@ -249,6 +255,9 @@ class AuthService extends BaseService
     }
 
 
+    /**
+     * @throws \Exception
+     */
     private function sendMail($email): bool
     {
         $otp = self::generateOtp($email);
@@ -256,6 +265,9 @@ class AuthService extends BaseService
         return true;
     }
 
+    /**
+     * @throws \Exception
+     */
     private function logout(): bool
     {
         $user = Auth::guard(self::getGuardForRequest())->user();
