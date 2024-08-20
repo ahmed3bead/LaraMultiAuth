@@ -126,6 +126,24 @@ $otp = LaraMultiAuth::guard('api')->generateAndSendOtp('test@mail.com');
 
 ```
 
+will return 
+
+```json
+{
+        "status": true,
+        "message": "OTP is valid"
+}
+```
+
+or
+
+```json
+{
+    "status": false,
+    "message": "OTP is not valid"
+}
+```
+
 **Get Current logged in user data**
 
 ```php
@@ -158,6 +176,7 @@ $token = LaraMultiAuth::guard('api')->forgetPassword($phone);
 // api is the guard you can change it to web or any another
 $data = [
     'identifier'=>'test@test.com', // can be phone number
+    'password'=>'password'
     'otp'=>125487
 ];
 $token = LaraMultiAuth::guard('api')->resetPassword($data);
@@ -166,15 +185,25 @@ Or you can add any fields name, but you must create otp by this field data
 ```php
 // api is the guard you can change it to web or any another
 
-$otp = LaraMultiAuth::guard('api')->generateOtp('ahmed ebead');
+$otp = LaraMultiAuth::guard('api')->generateOtp('Ahmed Ebead');
+
+
 $data = [
     'identifier_field_name'=>'name'
-    'identifier'=>'ahmed ebead', // can be phone number
-    'otp'=>$otp
+    'identifier'=>'ahmed ebead',
+    'password'=>'password'
+    'otp'=>125487
 ];
 $token = LaraMultiAuth::guard('api')->resetPassword($data);
 ```
-
+if you don't need to verify otp on reset password just pass false as second argument 
+```php
+// api is the guard you can change it to web or any another
+$data = [
+    'password'=>'password'
+];
+$token = LaraMultiAuth::guard('api')->resetPassword($data,false);
+```
 
 ## 5\. Models Implementation
 
@@ -275,9 +304,11 @@ You can do this by adding an autoload entry to the composer.json file in your La
 Open the composer.json file and add the following entry to the autoload section:
 
 ```json
-"files": [
-"app/Helpers/helper.php"
-]
+{
+    "files": [
+        "app/Helpers/helper.php"
+    ]
+}
 ```
 
 ### D\. Use the Helper Function
