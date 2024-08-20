@@ -184,7 +184,7 @@ class AuthService extends BaseService
     /**
      * @throws \Exception
      */
-    public static function resetPassword(array $data,$verifyOtp = false)
+    public static function resetPassword(array $data,$verifyOtp = true)
     {
         $guard = self::getGuardForRequest();
         $modelClass = self::getModelClassForGuard($guard);
