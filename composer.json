@@ -1,6 +1,6 @@
 {
     "name": "ahmedebead/laramultiauth",
-    "description": "A comprehensive authentication package for Laravel.",
+    "description": "LaraMultiAuth is a versatile Laravel package designed to simplify the implementation of multiple authentication systems within a single Laravel application.",
     "type": "library",
     "require": {
         "php": "^8.1",
