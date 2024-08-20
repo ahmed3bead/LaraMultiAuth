@@ -13,8 +13,10 @@
 
 ## 1\. Introduction
 
-LaraMultiAuth is a Laravel package designed to handle comprehensive authentication features. It supports both API and
-web authentication, including multi-guard setups and OTP verification for email and phone.
+LaraMultiAuth is a versatile Laravel package designed to simplify the implementation of multiple authentication systems within a single Laravel application.
+It provides a streamlined solution for managing different types of user authentication,
+enabling you to support various user roles and authentication methods with ease.
+It supports both API and web authentication, including multi-guard setups and OTP verification for email and phone.
 
 ## 2\. Installation
 
